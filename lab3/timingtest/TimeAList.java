@@ -1,9 +1,5 @@
 package timingtest;
 import edu.princeton.cs.algs4.Stopwatch;
-import edu.princeton.cs.introcs.In;
-import org.checkerframework.checker.units.qual.A;
-
-import java.security.PrivateKey;
 
 /**
  * Created by hug.

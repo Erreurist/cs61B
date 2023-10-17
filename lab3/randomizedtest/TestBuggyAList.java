@@ -1,8 +1,6 @@
 package randomizedtest;
 
-import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdRandom;
-import org.apache.commons.beanutils.PropertyUtilsBean;
 import org.junit.Test;
 import static org.junit.Assert.*;
 

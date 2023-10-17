@@ -1,5 +1,4 @@
 package timingtest;
-import antlr.collections.impl.LList;
 import edu.princeton.cs.algs4.Stopwatch;
 
 /**
