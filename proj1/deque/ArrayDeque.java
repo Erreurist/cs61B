@@ -5,11 +5,13 @@ import java.util.Iterator;
 public class ArrayDeque<T> implements Iterable<T> {
     private T[] items;
     private int size;
-    private int rear1, rear2 = -1;
+    private int rear1, rear2;
 
     public ArrayDeque() {
         items = (T[]) new Object[8];
         size = 0;
+        rear1 = 4;
+        rear2 = 3;
     }
 
 
