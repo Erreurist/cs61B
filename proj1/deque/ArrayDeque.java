@@ -2,7 +2,7 @@ package deque;
 
 import java.util.Iterator;
 
-public class ArrayDeque<T> implements Iterable<T>{
+public class ArrayDeque<T> implements Iterable<T> {
     T[] items;
     int size;
     int rear1, rear2;
@@ -86,9 +86,9 @@ public class ArrayDeque<T> implements Iterable<T>{
         if (index >= size) {
             return null;
         }
-        int p =rear1;
-        for (int i = 0; i < index; i++) {
-            p = rearAdd(p);
+        int p = rear1 + index;
+        if (p >= size) {
+            p -= size;
         }
         return items[p];
     }
