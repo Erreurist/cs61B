@@ -14,9 +14,6 @@ public class ArrayDeque<T> implements Iterable<T> {
         rear2 = size;
     }
 
-//    private void resize() {
-//        T[] newItems =
-//    }
 
     private int rearAdd(int rear) {
         rear++;
@@ -54,7 +51,7 @@ public class ArrayDeque<T> implements Iterable<T> {
     }
 
     public void printDeque() {
-        int p =rear1;
+        int p = rear1;
         for (int i = 0; i < size; i++) {
             System.out.println(items[p] + " ");
             p = rearAdd(p);
@@ -87,8 +84,8 @@ public class ArrayDeque<T> implements Iterable<T> {
             return null;
         }
         int p = rear1 + index;
-        if (p >= size) {
-            p -= size;
+        if (p >= items.length) {
+            p -= items.length;
         }
         return items[p];
     }
@@ -98,7 +95,7 @@ public class ArrayDeque<T> implements Iterable<T> {
         return new ArrayDequeIterator();
     }
 
-    private class ArrayDequeIterator implements Iterator{
+    private class ArrayDequeIterator implements Iterator {
 
         int p;
         int cnt;

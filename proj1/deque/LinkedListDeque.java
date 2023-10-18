@@ -36,7 +36,7 @@ public class LinkedListDeque<T> implements Iterable<T> {
     public void addFirst(T item) {
         Node first = new Node(item, sentinal, sentinal.next);
         sentinal.next.prev = first;
-        sentinal.next =first;
+        sentinal.next = first;
         size++;
     }
 
@@ -56,7 +56,7 @@ public class LinkedListDeque<T> implements Iterable<T> {
     }
 
     public void printDeque() {
-        for (Node p =sentinal.next; p != sentinal; p = p.next){
+        for (Node p = sentinal.next; p != sentinal; p = p.next) {
             System.out.print(p.item + " ");
         }
         System.out.println();
@@ -88,7 +88,7 @@ public class LinkedListDeque<T> implements Iterable<T> {
         if (index >= size) {
             return null;
         }
-        Node p =sentinal;
+        Node p = sentinal;
         for (int i = 0; i <= index; i++) {
             p = p.next;
         }
@@ -103,7 +103,7 @@ public class LinkedListDeque<T> implements Iterable<T> {
     }
 
     private Node getRecursiveNode(int idx) {
-        if (idx == 0){
+        if (idx == 0) {
             return sentinal.next;
         }
         return getRecursiveNode(idx - 1).next;
