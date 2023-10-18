@@ -3,15 +3,13 @@ package deque;
 import java.util.Iterator;
 
 public class ArrayDeque<T> implements Iterable<T> {
-    T[] items;
-    int size;
-    int rear1, rear2;
+    private T[] items;
+    private int size;
+    private int rear1, rear2 = -1;
 
     public ArrayDeque() {
         items = (T[]) new Object[8];
         size = 0;
-        rear1 = size;
-        rear2 = size;
     }
 
 
@@ -53,7 +51,7 @@ public class ArrayDeque<T> implements Iterable<T> {
     public void printDeque() {
         int p = rear1;
         for (int i = 0; i < size; i++) {
-            System.out.println(items[p] + " ");
+            System.out.print(items[p] + " ");
             p = rearAdd(p);
         }
         System.out.println();
@@ -134,5 +132,12 @@ public class ArrayDeque<T> implements Iterable<T> {
             }
         }
         return true;
+    }
+
+    public static void main(String[] args) {
+        ArrayDeque<Integer> A = new ArrayDeque<>();
+        A.addLast(0);
+        System.out.println(A.get(0));
+        A.printDeque();
     }
 }
