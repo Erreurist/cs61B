@@ -136,7 +136,7 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
         int p;
         int cnt;
 
-        public ArrayDequeIterator() {
+        private ArrayDequeIterator() {
             p = rear1 - 1;
             cnt = 0;
         }
