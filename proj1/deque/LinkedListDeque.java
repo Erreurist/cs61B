@@ -139,14 +139,14 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
     }
 
     public boolean equals(Object o) {
-        if (!(o instanceof LinkedListDeque)) {
+        if (!(o instanceof Deque)) {
             return false;
         }
-        if (size != ((LinkedListDeque<?>) o).size) {
+        if (size != ((Deque<?>) o).size()) {
             return false;
         }
         for (int i = 0; i < size; i++) {
-            if (!((LinkedListDeque<?>) o).get(i).equals(get(i))) {
+            if (!((Deque<?>) o).get(i).equals(get(i))) {
                 return false;
             }
         }

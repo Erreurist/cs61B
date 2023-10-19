@@ -6,6 +6,7 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
     private T[] items;
     private int size;
     private int rear1, rear2;
+    private final int MAXSIZE = 16;
 
     public ArrayDeque() {
         items = (T[]) new Object[8];
@@ -90,7 +91,7 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
         if (isEmpty()) {
             return null;
         }
-        if (size - 1 < items.length / 4.0 && items.length >= 16) {
+        if (size - 1 < items.length / 4.0 && items.length >= MAXSIZE) {
             resizeContract();
         }
         size--;
@@ -104,7 +105,7 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
         if (isEmpty()) {
             return null;
         }
-        if (size - 1 < items.length / 4.0  && items.length >= 16) {
+        if (size - 1 < items.length / 4.0  && items.length >= MAXSIZE) {
             resizeContract();
         }
         size--;
@@ -157,26 +158,17 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
     }
 
     public boolean equals(Object o) {
-        if (!(o instanceof ArrayDeque)) {
+        if (!(o instanceof Deque)) {
             return false;
         }
-        if (size != ((ArrayDeque<?>) o).size) {
+        if (size != ((Deque<?>) o).size()) {
             return false;
         }
         for (int i = 0; i < size; i++) {
-            if (!((ArrayDeque<?>) o).get(i).equals(get(i))) {
+            if (!((Deque<?>) o).get(i).equals(get(i))) {
                 return false;
             }
         }
         return true;
-    }
-
-    public static void main(String[] args) {
-        ArrayDeque<Integer> A = new ArrayDeque<>();
-        for (int i = 0; i < 100; i++) {
-            A.addLast(i);
-        }
-        System.out.println(A.get(99));
-        A.printDeque();
     }
 }
