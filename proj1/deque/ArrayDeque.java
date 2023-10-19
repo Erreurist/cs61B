@@ -31,8 +31,30 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
         }
         return rear;
     }
+
+    private void resize(double k) {
+        T[] newItems = (T[]) new Object[(int) (k * items.length)];
+        int p = rear1;
+        for (int i = 0; i < size; i++) {
+            newItems[i] = items[p];
+            p = rearAdd(p);
+        }
+        rear1 = 0;
+        rear2 = size - 1;
+        items = newItems;
+    }
+    private void resizeExpand() {
+        resize(2);
+    }
+
+    private void resizeContract() {
+        resize(0.5);
+    }
     @Override
     public void addFirst(T item) {
+        if (size == items.length) {
+            resizeExpand();
+        }
         size++;
         rear1 = rearMinus(rear1);
         items[rear1] = item;
@@ -40,6 +62,9 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
 
     @Override
     public void addLast(T item) {
+        if (size == items.length) {
+            resizeExpand();
+        }
         size++;
         rear2 = rearAdd(rear2);
         items[rear2] = item;
@@ -65,6 +90,9 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
         if (isEmpty()) {
             return null;
         }
+        if (size - 1 < items.length / 4.0 && items.length >= 16) {
+            resizeContract();
+        }
         size--;
         T returnItem = items[rear1];
         rear1 = rearAdd(rear1);
@@ -75,6 +103,9 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
     public T removeLast() {
         if (isEmpty()) {
             return null;
+        }
+        if (size - 1 < items.length / 4.0  && items.length >= 16) {
+            resizeContract();
         }
         size--;
         T returnItem = items[rear2];
@@ -142,8 +173,10 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
 
     public static void main(String[] args) {
         ArrayDeque<Integer> A = new ArrayDeque<>();
-        A.addLast(0);
-        System.out.println(A.get(0));
+        for (int i = 0; i < 100; i++) {
+            A.addLast(i);
+        }
+        System.out.println(A.get(99));
         A.printDeque();
     }
 }
