@@ -97,14 +97,14 @@ class Utils {
     /* OTHER FILE UTILITIES */
 
     /** Return the concatentation of FIRST and OTHERS into a File designator,
-     *  analogous to the {@link java.nio.file.Paths.#get(String, String[])}
+     *  analogous to the {@link java.nio.file.Paths#get(String, String[])}
      *  method. */
     static File join(String first, String... others) {
         return Paths.get(first, others).toFile();
     }
 
     /** Return the concatentation of FIRST and OTHERS into a File designator,
-     *  analogous to the {@link java.nio.file.Paths.#get(String, String[])}
+     *  analogous to the {@link java.nio.file.Paths#get(String, String[])}
      *  method. */
     static File join(File first, String... others) {
         return Paths.get(first.getPath(), others).toFile();
@@ -145,8 +145,8 @@ class Utils {
         System.exit(-1);
     }
 
-    /** Return a RuntimeException whose message is composed from MSG and ARGS as
-     *  for the String.format method. */
+    /** Return a RuntimeException whose message is composed of MSG and ARGS as
+     *  for the String. Format method. */
     static RuntimeException error(String msg, Object... args) {
         return new RuntimeException(String.format(msg, args));
     }
