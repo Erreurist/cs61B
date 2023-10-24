@@ -1,26 +1,72 @@
 package gitlet;
 
-// TODO: any imports you need here
+import java.io.Serializable;
+import java.util.*;
 
-import java.util.Date; // TODO: You'll likely use this in this class
+import static gitlet.Utils.*;
+import static gitlet.Repository.*;
 
 /** Represents a gitlet commit object.
- *  TODO: It's a good idea to give a description here of what else this Class
+ *  It's a good idea to give a description here of what else this Class
  *  does at a high level.
  *
- *  @author TODO
+ *  @author Xinfeng Fu
  */
-public class Commit {
-    /**
-     * TODO: add instance variables here.
-     *
-     * List all instance variables of the Commit class here with a useful
-     * comment above them describing what that variable represents and how that
-     * variable is used. We've provided one example for `message`.
-     */
+public class Commit implements Serializable {
 
-    /** The message of this Commit. */
-    private String message;
 
-    /* TODO: fill in the rest of this class. */
+
+    private String parent;
+
+    private Date timestamp;
+
+    private String msg;
+
+
+    /** file name blob id */
+    private HashMap<String, String> fileBlobs;
+
+    public Commit(String parent, String msg) {
+        this.parent = parent;
+        this.timestamp = new Date();
+        this.msg = msg;
+        this.fileBlobs = new HashMap<String, String>();
+    }
+
+    public void setTimestamp(Date timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public String getId() {
+        if (parent == null) {
+            return sha1(timestamp.toString(), msg, fileBlobs.keySet().toString(), fileBlobs.values().toString());
+        }
+        return sha1(parent, timestamp.toString(), msg, fileBlobs.keySet().toString(), fileBlobs.values().toString());
+    }
+
+    /** serialize the commit obj to the file in OBJ_DIR*/
+    public void writeCommit() {
+        String id = getId();
+        writeObject((join(OBJ_DIR, id)), this);
+    }
+
+
+
+    @Override
+    public String toString() {
+        return "===" + "\ncommit " + getId() + "\nDate: " + timestamp + "\n" + msg + "\n";
+    }
+
+    public HashMap<String, String> getFileBlobs() {
+        return fileBlobs;
+    }
+
+    public void addBlob(String name, String blob) {
+        fileBlobs.put(name, blob);
+    }
+
+    public String getParent() {
+        return parent;
+    }
+
 }
