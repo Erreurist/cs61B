@@ -73,7 +73,7 @@ public class Repository {
         }
     }
 
-    public static void add(String[] args) throws IOException {
+    public static void add(String[] args) {
         validateNumArgs(args, 2);
         if (checkInit()) {
             String name = args[1];
