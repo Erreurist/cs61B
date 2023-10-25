@@ -13,12 +13,12 @@ public class Main {
      *  <COMMAND> <OPERAND1> <OPERAND2> ... 
      */
     public static void main(String[] args) throws IOException {
-        if (args.length == 0) {
-            System.out.println("Please enter a command.");
-            System.exit(0);
-        }
-        String firstArg = args[0];
         try {
+            if (args.length == 0) {
+                System.out.println("Please enter a command.");
+                System.exit(0);
+            }
+            String firstArg = args[0];
             switch(firstArg) {
                 case "init":
                     Repository.init(args);
@@ -56,8 +56,8 @@ public class Main {
                     System.exit(0);
 
             }
-        }  catch (IOException excp) {
-            throw error("Error");
+        } catch (IOException e) {
+            throw e;
         }
     }
 }
