@@ -5,6 +5,9 @@ import java.util.*;
 
 import static gitlet.Utils.*;
 import static gitlet.Repository.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 /** Represents a gitlet commit object.
  *  It's a good idea to give a description here of what else this Class
@@ -50,11 +53,16 @@ public class Commit implements Serializable {
         writeObject((join(OBJ_DIR, id)), this);
     }
 
+    private String formatTimestamp() {
+        SimpleDateFormat format = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.ENGLISH);
+        return format.format(timestamp);
+    }
+
 
 
     @Override
     public String toString() {
-        return "===" + "\ncommit " + getId() + "\nDate: " + timestamp + "\n" + msg + "\n";
+        return "===" + "\ncommit " + getId() + "\nDate: " + formatTimestamp() + "\n" + msg + "\n";
     }
 
     public HashMap<String, String> getFileBlobs() {
