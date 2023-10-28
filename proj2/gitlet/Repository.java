@@ -112,38 +112,13 @@ public class Repository {
         
         info.clear();
         info.putInBranches(info.getCurBranch(), commit);
+        if (info.getSecondParent() != null) {
+            commit.setSecondParent(info.getSecondParent());
+            info.setSecondParent(null);
+        }
         commit.writeCommit();
         info.writeInfo();
     }
-//    public static void commit(String[] args) throws IOException {
-//        /** Load stage obj */
-//        Stage stage = readObject(STAGE_FILE, Stage.class);
-//        /** If no files have been staged, abort. Print the message No changes added to the commit. */
-//        if (stage.stagedForAdditionIsEmpty()) {
-//            System.out.println("No changes added to the commit.");
-//            return;
-//        }
-//        if (args.length == 1) {
-//            System.out.println("Please enter a commit message.");
-//            return;
-//        }
-//
-//        Commit commit = new Commit(readContentsAsString(MASTER_FILE), args[1]);
-//        Commit parentCommit = readObject(join(OBJ_DIR, readContentsAsString(MASTER_FILE)), Commit.class);
-//        HashMap<String, String> fileBlobs = parentCommit.getFileBlobs();
-//        for(String file : fileBlobs.keySet()) {
-//            commit.addBlob(file, fileBlobs.get(file));
-//        }
-//
-//        for (String file : stage.stagedForAddition.keySet()) {
-//            commit.addBlob(file, stage.stagedForAddition.get(file));
-//        }
-//
-//        commit.writeCommit();
-//        stage.stagedForAddition.clear();
-//        stage.writeStage();
-//        writeContents(MASTER_FILE, commit.getId());
-//    }
 
 
     public static void checkout(String[] args) {
@@ -475,7 +450,13 @@ public class Repository {
                     continue;
                 } else {
                     // handle conflict
-                    handleConflict(curCommit, mergeCommit, name, info);
+                    System.out.println("Encountered a merge conflict.");
+                    String newContent = handleConflictResult(curCommit, mergeCommit, name);
+                    writeContents(new File(name), newContent);
+
+                    info.putInStagedForAddition(name, getFileId(name));
+                    Blob blob = new Blob(new File(name));
+                    blob.writeBlob();
                 }
             }
         }
@@ -500,9 +481,18 @@ public class Repository {
                 continue;
             } else if (!curBlob.equals(mergeBlob)) {
                 // handle conflict
-                handleConflict(curCommit, mergeCommit, name, info);
+                System.out.println("Encountered a merge conflict.");
+                String newContent = handleConflictResult(curCommit, mergeCommit, name);
+                writeContents(new File(name), newContent);
+
+                info.putInStagedForAddition(name, getFileId(name));
+                Blob blob = new Blob(new File(name));
+                blob.writeBlob();
             }
         }
+        info.setSecondParent(info.getCommitFromBranch(mergedBranchName));
+        info.removeFromBranches(mergedBranchName);
+        info.writeInfo();
     }
 
     private static void mergeErrorHandle(String[] args) {
@@ -576,20 +566,10 @@ public class Repository {
 
     private static String handleConflictResult(Commit curCommit, Commit mergeCommit, String name) {
 
-        return "<<<<<<< HEAD" + readBlobContentById(curCommit.getFileBlobs().get(name)) + "======="
+        return "<<<<<<< HEAD\n" + readBlobContentById(curCommit.getFileBlobs().get(name)) + "=======\n"
                 + readBlobContentById(mergeCommit.getFileBlobs().get(name)) + ">>>>>>>";
     }
 
-    private static void handleConflict(Commit curCommit, Commit mergeCommit, String name, Info info) {
-        System.out.println("Encountered a merge conflict.");
-        String newContent = handleConflictResult(curCommit, mergeCommit, name);
-        writeContents(new File(name), newContent);
-
-        info.putInStagedForAddition(name, getFileId(name));
-        info.writeInfo();
-        Blob blob = new Blob(new File(name));
-        blob.writeBlob();
-    }
 
     private static void validateNumArgs(String[] args, int n) {
         if (args.length != n) {

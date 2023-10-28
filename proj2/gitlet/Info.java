@@ -20,11 +20,22 @@ public class Info implements Serializable {
     /** current branch name */
     private String curBranch;
 
+    public String getSecondParent() {
+        return secondParent;
+    }
+
+    public void setSecondParent(String secondParent) {
+        this.secondParent = secondParent;
+    }
+
+    private String secondParent;
+
     public Info() {
         stagedForAddition = new TreeMap<>();
         stagedForRemoval = new TreeMap<>();
         branches = new TreeMap<>();
         curBranch = "master";
+        secondParent = null;
     }
 
     public TreeMap<String, String> getStagedForAddition() {
