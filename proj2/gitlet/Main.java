@@ -19,7 +19,7 @@ public class Main {
                 System.exit(0);
             }
             String firstArg = args[0];
-            switch(firstArg) {
+            switch (firstArg) {
                 case "init":
                     Repository.init(args);
                     break;
@@ -30,26 +30,34 @@ public class Main {
                     Repository.commit(args);
                     break;
                 case "rm":
+                    Repository.rm(args);
                     break;
                 case "log":
                     Repository.log(args);
                     break;
                 case "global-log":
+                    Repository.globalLog(args);
                     break;
                 case "find":
+                    Repository.find(args);
                     break;
                 case "status":
+                    Repository.status(args);
                     break;
                 case "checkout":
                     Repository.checkout(args);
                     break;
                 case "branch":
+                    Repository.branch(args);
                     break;
                 case "rm-branch":
+                    Repository.rmBranch(args);
                     break;
                 case "reset":
+                    Repository.reset(args);
                     break;
                 case "merge":
+                    Repository.merge(args);
                     break;
                 default:
                     System.out.println("No command with that name exists.");
