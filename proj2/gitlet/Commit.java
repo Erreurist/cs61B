@@ -17,11 +17,11 @@ import java.util.Locale;
  */
 public class Commit implements Serializable {
 
-    private String parent;
+    private final String parent;
 
     private Date timestamp;
 
-    private String msg;
+    private final String msg;
 
     private String secondParent;
     /** file name blob id */
@@ -31,7 +31,7 @@ public class Commit implements Serializable {
         this.parent = parent;
         this.timestamp = new Date();
         this.msg = msg;
-        this.fileBlobs = new HashMap<String, String>();
+        this.fileBlobs = new HashMap<>();
         this.secondParent = null;
     }
 
@@ -44,10 +44,13 @@ public class Commit implements Serializable {
     }
 
     public String getId() {
-        if (parent == null) {
-            return sha1(timestamp.toString(), msg, fileBlobs.keySet().toString(), fileBlobs.values().toString());
+        String res = "";
+        res += timestamp.toString() + msg;
+        res += fileBlobs.keySet().toString() + fileBlobs.values().toString();
+        if (parent != null) {
+            res += parent;
         }
-        return sha1(parent, timestamp.toString(), msg, fileBlobs.keySet().toString(), fileBlobs.values().toString());
+        return sha1(res);
     }
 
 
@@ -97,11 +100,8 @@ public class Commit implements Serializable {
     }
 
     public static Commit readCurCommit(Info info) {
-        return readObject(join(COMMIT_DIR, info.getBranches().get(info.getCurBranch())), Commit.class);
-    }
-
-    public static Commit readParentCommit(Info info) {
-        return readObject(join(COMMIT_DIR, info.getBranches().get(info.getCurBranch())), Commit.class);
+        String id = info.getBranches().get(info.getCurBranch());
+        return readObject(join(COMMIT_DIR, id), Commit.class);
     }
 
     public static Commit readCommit(String id) {

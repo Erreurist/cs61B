@@ -74,6 +74,7 @@ public class Repository {
 
         if (commit.getBlobId(name) != null && commit.getBlobId(name).equals(getFileId(file))) {
             info.removeFromStagedForAddition(name);
+            info.removeFromStagedForRemoval(name);
         } else {
             info.putInStagedForAddition(name, file);
             Blob blob = new Blob(file);
@@ -84,19 +85,20 @@ public class Repository {
 
     /** java gitlet.Main commit [message] */
     public static void commit(String[] args) throws IOException {
-        /** Load info obj */
+        validateNumArgs(args, 2);
         Info info = Info.getInfo();
+        String msg = args[1];
         if (info.stagedIsEmpty()) {
             System.out.println("No changes added to the commit.");
             System.exit(0);
         }
-        if (args.length == 1) {
+        if (msg.equals("\"\"")) {
             System.out.println("Please enter a commit message.");
             System.exit(0);
         }
         checkInit();
         Commit parentCommit = Commit.readCurCommit(info);
-        Commit commit = new Commit(parentCommit.getId(), args[1]);
+        Commit commit = new Commit(parentCommit.getId(), msg);
         
         for (String name : parentCommit.getFileBlobs().keySet()) {
             commit.addBlob(name, parentCommit.getBlobId(name));
@@ -126,6 +128,17 @@ public class Repository {
             System.out.println("Incorrect operands.");
             System.exit(0);
         }
+        if (args.length == 3) {  // checkout -- [file name]
+            if (!args[1].equals("--")) {
+                System.out.println("Incorrect operands.");
+                System.exit(0);
+            }
+        } else if (args.length == 4) {  // checkout [commit id] -- [file name]
+            if (!args[2].equals("--")) {
+                System.out.println("Incorrect operands.");
+                System.exit(0);
+            }
+        }
         checkInit();
         if (args.length == 2) {  // checkout [branch name]
             checkout3(args);
@@ -151,17 +164,33 @@ public class Repository {
     /** java gitlet.Main checkout [commit id] -- [file name] */
     private static void checkout2(String[] args) {
         String id = args[1];
-        if (id.length() == 6) {
+        if (id.length() < 40) {
             List<String> names = plainFilenamesIn(COMMIT_DIR);
             assert names != null;
             for (String name : names) {
-                if (id.equals(name.substring(0, 6))) {
+                if (id.equals(name.substring(0, id.length()))) {
                     id = name;
                 }
             }
 
         }
-        if (id.length() == 6) {
+        if (id.length() < 40) {
+            System.out.println("No commit with that id exists.");
+            return;
+        }
+
+
+
+        List<String> names = plainFilenamesIn(COMMIT_DIR);
+        boolean flag = false;
+        assert names != null;
+        for (String name : names) {
+            if (id.equals(name)) {
+                flag = true;
+                break;
+            }
+        }
+        if (!flag) {
             System.out.println("No commit with that id exists.");
             return;
         }
@@ -191,13 +220,14 @@ public class Repository {
         Commit checkedCommit = readObject(join(COMMIT_DIR, info.getBranches().get(args[1])), Commit.class);
         Commit commit = readObject(join(COMMIT_DIR, info.getBranches().get(info.getCurBranch())), Commit.class);
 
-        /**  current files in the dir */
         List<String> names = plainFilenamesIn(CWD);
         if (names != null) {
             for (String name : names) {
                 if (!commit.getFileBlobs().containsKey(name) && checkedCommit.getFileBlobs().containsKey(name)) {
-                    System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
-                    System.exit(0);
+                    if (!checkedCommit.getBlobId(name).equals(getFileId(name))) {
+                        System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                        System.exit(0);
+                    }
                 }
             }
             for (String name : names) {
@@ -246,14 +276,20 @@ public class Repository {
         Info info = Info.getInfo();
         Commit commit = Commit.readCurCommit(info);
 
-        if (commit.getBlobId(name) == null) {
+        if (commit.getBlobId(name) == null && info.getBlobIdInStagedForAddition(name) == null) {
             System.out.println("No reason to remove the file.");
-        } else {
-            info.removeFromStagedForAddition(name);
-            info.putInStagedForRemoval(name, file);
-            info.writeInfo();
-            join(CWD, name).delete();
+            System.exit(0);
         }
+        if (info.getBlobIdInStagedForAddition(name) != null) {
+            info.removeFromStagedForAddition(name);
+        }
+        if (commit.getBlobId(name) != null) {
+            info.putInStagedForRemoval(name, commit.getBlobId(name));
+            if (new File(name).exists()) {
+                join(CWD, name).delete();
+            }
+        }
+        info.writeInfo();
     }
 
     public static void globalLog(String[] args) {
@@ -352,17 +388,31 @@ public class Repository {
         validateNumArgs(args, 2);
         checkInit();
         String id = args[1];
-        if (id.length() == 6) {
+        if (id.length() < 40) {
             List<String> names = plainFilenamesIn(COMMIT_DIR);
             assert names != null;
             for (String name : names) {
-                if (id.equals(name.substring(0, 6))) {
+                if (id.equals(name.substring(0, id.length()))) {
                     id = name;
                 }
             }
 
         }
-        if (id.length() == 6) {
+        if (id.length() < 40) {
+            System.out.println("No commit with that id exists.");
+            return;
+        }
+
+        List<String> commitIds = plainFilenamesIn(COMMIT_DIR);
+        boolean flag = false;
+        assert commitIds != null;
+        for (String commitId : commitIds) {
+            if (id.equals(commitId)) {
+                flag = true;
+                break;
+            }
+        }
+        if (!flag) {
             System.out.println("No commit with that id exists.");
             return;
         }
@@ -377,8 +427,10 @@ public class Repository {
         if (names != null) {
             for (String name : names) {
                 if (!commit.getFileBlobs().containsKey(name) && checkedCommit.getFileBlobs().containsKey(name)) {
-                    System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
-                    System.exit(0);
+                    if (!checkedCommit.getBlobId(name).equals(getFileId(name))) {
+                        System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                        System.exit(0);
+                    }
                 }
             }
             for (String name : names) {
@@ -565,9 +617,8 @@ public class Repository {
     }
 
     private static String handleConflictResult(Commit curCommit, Commit mergeCommit, String name) {
-
-        return "<<<<<<< HEAD\n" + readBlobContentById(curCommit.getFileBlobs().get(name)) + "=======\n"
-                + readBlobContentById(mergeCommit.getFileBlobs().get(name)) + ">>>>>>>";
+        return "<<<<<<< HEAD\n" + readBlobContentById(curCommit.getBlobId(name)) + "=======\n"
+                + readBlobContentById(mergeCommit.getBlobId(name)) + ">>>>>>>";
     }
 
 
