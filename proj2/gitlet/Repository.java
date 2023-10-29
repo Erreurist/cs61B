@@ -2,6 +2,7 @@ package gitlet;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.*;
 import static gitlet.Blob.getFileId;
 import static gitlet.Blob.readBlobContentById;
@@ -92,7 +93,7 @@ public class Repository {
             System.out.println("No changes added to the commit.");
             System.exit(0);
         }
-        if (msg.equals("\"\"")) {
+        if (msg.equals("")) {
             System.out.println("Please enter a commit message.");
             System.exit(0);
         }
@@ -458,7 +459,7 @@ public class Repository {
         }
     }
 
-    public static void merge(String[] args) {
+    public static void merge(String[] args) throws IOException {
         mergeErrorHandle(args);
         Info info = Info.getInfo();
         String mergedBranchName = args[1];
@@ -543,8 +544,12 @@ public class Repository {
             }
         }
         info.setSecondParent(info.getCommitFromBranch(mergedBranchName));
-        info.removeFromBranches(mergedBranchName);
+//        info.removeFromBranches(mergedBranchName);
         info.writeInfo();
+        String[] commitArgs = new String[2];
+        commitArgs[0] = "commit";
+        commitArgs[1] = "Merged " + mergedBranchName + " into " + info.getCurBranch() +  ".";
+        commit(commitArgs);
     }
 
     private static void mergeErrorHandle(String[] args) {
@@ -617,8 +622,20 @@ public class Repository {
     }
 
     private static String handleConflictResult(Commit curCommit, Commit mergeCommit, String name) {
-        return "<<<<<<< HEAD\n" + readBlobContentById(curCommit.getBlobId(name)) + "=======\n"
-                + readBlobContentById(mergeCommit.getBlobId(name)) + ">>>>>>>";
+        String res = "<<<<<<< HEAD\n";
+        if (curCommit.getBlobId(name) != null) {
+            res += readBlobContentById(curCommit.getBlobId(name));
+        } else {
+            res += "\n";
+        }
+        res += "=======\n";
+        if (mergeCommit.getBlobId(name) != null) {
+            res += readBlobContentById(mergeCommit.getBlobId(name));
+        } else {
+            res += "\n";
+        }
+        res += ">>>>>>>";
+        return res;
     }
 
 
