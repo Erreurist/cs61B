@@ -625,11 +625,11 @@ public class Repository {
     private static String handleConflictResult(Commit curCommit, Commit mergeCommit, String name) {
         String res = "<<<<<<< HEAD\n";
         if (curCommit.getBlobId(name) != null) {
-            res += readBlobContentById(curCommit.getBlobId(name)) + "\n";
+            res += readBlobContentById(curCommit.getBlobId(name));
         }
         res += "=======\n";
         if (mergeCommit.getBlobId(name) != null) {
-            res += readBlobContentById(mergeCommit.getBlobId(name)) + "\n";
+            res += readBlobContentById(mergeCommit.getBlobId(name));
         }
         res += ">>>>>>>";
         return res;
