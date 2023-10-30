@@ -1,8 +1,8 @@
 package gitlet;
 
+
 import java.io.File;
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.*;
 import static gitlet.Blob.getFileId;
 import static gitlet.Blob.readBlobContentById;
@@ -558,7 +558,6 @@ public class Repository {
         Info info = Info.getInfo();
         String mergedBranchName = args[1];
         List<String> names = plainFilenamesIn(CWD);
-        Commit mergeCommit = Commit.readCommit(info.getCommitFromBranch(mergedBranchName));
         Commit curCommit = Commit.readCurCommit(info);
         if (!info.stagedIsEmpty()) {
             System.out.println("You have uncommitted changes.");
@@ -568,17 +567,17 @@ public class Repository {
             System.out.println("A branch with that name does not exist.");
             System.exit(0);
         }
+        Commit mergeCommit = Commit.readCommit(info.getCommitFromBranch(mergedBranchName));
         if (info.getCurBranch().equals(mergedBranchName)) {
             System.out.println("Cannot merge a branch with itself.");
             System.exit(0);
         }
+        Commit commit = Commit.readCurCommit(info);
         if (names != null) {
             for (String name : names) {
-                if (curCommit.getBlobId(name) == null) {
-                    String blobId = mergeCommit.getBlobId(name);
-                    if (blobId == null || blobId.equals(getFileId(new File(name)))) {
-                        String msg = "There is an untracked file in the way; delete it, or add and commit it first.";
-                        System.out.println(msg);
+                if (!commit.getFileBlobs().containsKey(name) && mergeCommit.getFileBlobs().containsKey(name)) {
+                    if (!mergeCommit.getBlobId(name).equals(getFileId(name))) {
+                        System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                         System.exit(0);
                     }
                 }
@@ -587,52 +586,50 @@ public class Repository {
     }
 
     private static Commit getSplitCommit(Commit mergeCommit, Commit curCommit) {
-        Commit tmp, tmp1, tmp2;
+        HashMap<Integer, String> gToC = new HashMap<>();
+        HashMap<String, Integer> cToG = new HashMap<>();
         Commit split = null;
-        ArrayDeque<Commit> ancestorOfMergeCommit = new ArrayDeque<>();
-        ArrayDeque<Commit> ancestorOfCurCommit = new ArrayDeque<>();
-        ancestorOfMergeCommit.addLast(mergeCommit);
-        ancestorOfCurCommit.addLast(curCommit);
-        tmp = mergeCommit;
-        while (tmp.getParent() != null) {
-            tmp = readObject(join(COMMIT_DIR, tmp.getParent()), Commit.class);
-            ancestorOfMergeCommit.addFirst(tmp);
-        }
-        tmp = curCommit;
-        while (tmp.getParent() != null) {
-            tmp = readObject(join(COMMIT_DIR, tmp.getParent()), Commit.class);
-            ancestorOfCurCommit.addFirst(tmp);
-        }
-        tmp = ancestorOfMergeCommit.getFirst();
-        while (true) {
-            tmp1 = ancestorOfMergeCommit.getFirst();
-            tmp2 = ancestorOfCurCommit.getFirst();
-            if (!tmp1.getId().equals(tmp2.getId())) {
-                split = tmp;
-                break;
+        int splitNum = 0, mergeNum = 0, curNum = 0;
+        List<String> names = plainFilenamesIn(COMMIT_DIR);
+        assert names != null;
+        int i = 0;
+        for (String name : names) {
+            gToC.put(i, name);
+            cToG.put(name, i);
+            if (mergeCommit.getId().equals(name)) {
+                mergeNum = i;
             }
-            tmp = tmp1;
-            ancestorOfMergeCommit.removeFirst();
-            ancestorOfCurCommit.removeFirst();
-            if (ancestorOfMergeCommit.size() == 0 || ancestorOfCurCommit.size() == 0) {
-                break;
+            if (curCommit.getId().equals(name)) {
+                curNum = i;
+            }
+            i++;
+        }
+        int tot = i;
+        DagBfs.Graph graph = new DagBfs.Graph(tot);
+        for (String name : names) {
+            Commit tmp = Commit.readCommit(name);
+            if (tmp.getParent() != null) {
+                graph.addEdge(cToG.get(tmp.getId()), cToG.get(tmp.getParent()));
+            }
+            if (tmp.getSecondParent() != null) {
+                graph.addEdge(cToG.get(tmp.getId()), cToG.get(tmp.getSecondParent()));
             }
         }
+        boolean[] visited = graph.bfsTraversal(mergeNum);
+        splitNum = graph.findSplit(curNum, visited);
+        String splitId = gToC.get(splitNum);
+        split = Commit.readCommit(splitId);
         return split;
     }
 
     private static String handleConflictResult(Commit curCommit, Commit mergeCommit, String name) {
         String res = "<<<<<<< HEAD\n";
         if (curCommit.getBlobId(name) != null) {
-            res += readBlobContentById(curCommit.getBlobId(name));
-        } else {
-            res += "\n";
+            res += readBlobContentById(curCommit.getBlobId(name)) + "\n";
         }
         res += "=======\n";
         if (mergeCommit.getBlobId(name) != null) {
-            res += readBlobContentById(mergeCommit.getBlobId(name));
-        } else {
-            res += "\n";
+            res += readBlobContentById(mergeCommit.getBlobId(name)) + "\n";
         }
         res += ">>>>>>>";
         return res;

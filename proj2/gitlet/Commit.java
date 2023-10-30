@@ -23,6 +23,10 @@ public class Commit implements Serializable {
 
     private final String msg;
 
+    public String getSecondParent() {
+        return secondParent;
+    }
+
     private String secondParent;
     /** file name blob id */
     private HashMap<String, String> fileBlobs;
