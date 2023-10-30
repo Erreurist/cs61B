@@ -29,13 +29,13 @@ public class Commit implements Serializable {
 
     private String secondParent;
     /** file name blob id */
-    private HashMap<String, String> fileBlobs;
+    private TreeMap<String, String> fileBlobs;
 
     public Commit(String parent, String msg) {
         this.parent = parent;
         this.timestamp = new Date();
         this.msg = msg;
-        this.fileBlobs = new HashMap<>();
+        this.fileBlobs = new TreeMap<>();
         this.secondParent = null;
     }
 
@@ -79,7 +79,7 @@ public class Commit implements Serializable {
         return res;
     }
 
-    public HashMap<String, String> getFileBlobs() {
+    public TreeMap<String, String> getFileBlobs() {
         return fileBlobs;
     }
 

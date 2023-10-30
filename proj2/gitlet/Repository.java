@@ -197,7 +197,7 @@ public class Repository {
             return;
         }
         Commit commit = readObject(join(COMMIT_DIR, id), Commit.class);
-        HashMap<String, String> fileBlobs = commit.getFileBlobs();
+        TreeMap<String, String> fileBlobs = commit.getFileBlobs();
         if (!fileBlobs.containsKey(args[3])) {
             System.out.println("File does not exist in that commit.");
             return;
@@ -350,8 +350,58 @@ public class Repository {
         }
         removedFiles += "\n";
         String modifications = "=== Modifications Not Staged For Commit ===\n";
+
+        List<String> files = plainFilenamesIn(CWD);
+        TreeSet<String> names = new TreeSet<>();
+        if (files != null) {
+            names.addAll(files);
+        }
+        Set<String> fileNames = new TreeSet<>();
+        Commit curCommit = Commit.readCurCommit(info);
+        fileNames.addAll(curCommit.getFileBlobs().keySet());
+        if (files != null) {
+            fileNames.addAll(files);
+        }
+        TreeMap<String, String> res1 = new TreeMap<>();
+        TreeSet<String> res2 = new TreeSet<>();
+        for (String name : fileNames) {
+            if (info.getBlobIdInStagedForAddition(name) == null) {
+                if (curCommit.getBlobId(name) != null) {
+                    String tmp = curCommit.getBlobId(name);
+                    if (names.contains(name) && !getFileId(name).equals(tmp)) {
+                        res1.put(name, " (modified)");
+                    }
+                }
+            } else if (info.getBlobIdInStagedForAddition(name) != null) {
+                if (names.contains(name)) {
+                    if (!getFileId(name).equals(info.getBlobIdInStagedForAddition(name))) {
+                        res1.put(name, " (modified)");
+                    }
+                } else {
+                    res1.put(name, " (deleted)");
+                }
+            }
+            if (info.getBlobIdInStagedForRemoval(name) == null) {
+                if (curCommit.getBlobId(name) != null && !names.contains(name)) {
+                    res1.put(name, " (deleted)");
+                }
+            }
+            if (curCommit.getBlobId(name) == null) {
+                if (info.getBlobIdInStagedForAddition(name) == null) {
+                    if (info.getBlobIdInStagedForRemoval(name) == null) {
+                        res2.add(name);
+                    }
+                }
+            }
+        }
+        for (String name : res1.keySet()) {
+            modifications += name + res1.get(name) + "\n";
+        }
         modifications += "\n";
         String untracked = "=== Untracked Files ===\n";
+        for (String res : res2) {
+            untracked += res + "\n";
+        }
         untracked += "\n";
         System.out.println(branch + stagedFiles + removedFiles + modifications + untracked);
     }
@@ -630,13 +680,13 @@ public class Repository {
     private static String handleConflictResult(Commit curCommit, Commit mergeCommit, String name) {
         String res = "<<<<<<< HEAD\n";
         if (curCommit.getBlobId(name) != null) {
-            res += readBlobContentById(curCommit.getBlobId(name)) + "\n";
+            res += readBlobContentById(curCommit.getBlobId(name));
         }
         res += "=======\n";
         if (mergeCommit.getBlobId(name) != null) {
-            res += readBlobContentById(mergeCommit.getBlobId(name)) + "\n";
+            res += readBlobContentById(mergeCommit.getBlobId(name));
         }
-        res += ">>>>>>>";
+        res += ">>>>>>>\n";
         return res;
     }
 
