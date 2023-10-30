@@ -511,6 +511,16 @@ public class Repository {
                     Blob blob = new Blob(new File(name));
                     blob.writeBlob();
                 }
+                if ((curBlob == null && mergeBlob != null) || (curBlob != null && mergeBlob == null)) {
+                    // handle conflict
+                    System.out.println("Encountered a merge conflict.");
+                    String newContent = handleConflictResult(curCommit, mergeCommit, name);
+                    writeContents(new File(name), newContent);
+
+                    info.putInStagedForAddition(name, getFileId(name));
+                    Blob blob = new Blob(new File(name));
+                    blob.writeBlob();
+                }
             }
         }
 
