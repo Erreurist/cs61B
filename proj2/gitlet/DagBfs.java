@@ -10,7 +10,7 @@ public class DagBfs {
         int vertices;
         List<Integer>[] adjList;
 
-        public Graph(int vertices) {
+        Graph(int vertices) {
             this.vertices = vertices;
             adjList = new ArrayList[vertices];
             for (int i = 0; i < vertices; i++) {
@@ -70,20 +70,4 @@ public class DagBfs {
         }
     }
 
-    public static void main(String[] args) {
-        Graph graph = new Graph(5);
-
-        graph.addEdge(0, 2);
-        graph.addEdge(2, 3);
-        graph.addEdge(0, 4);
-        graph.addEdge(1, 3);
-
-        boolean[] visited = graph.bfsTraversal(0);
-        for (int i = 0; i < 5; i++) {
-            System.out.println(visited[i]);
-        }
-        System.out.println(visited);
-        System.out.println(graph.findSplit(1, visited));
-
-    }
 }

@@ -69,7 +69,9 @@ public class Commit implements Serializable {
     @Override
     public String toString() {
         if (secondParent == null) {
-            return "===" + "\ncommit " + getId() + "\nDate: " + formatTimestamp() + "\n" + msg + "\n";
+            String res = "===" + "\ncommit " + getId();
+            res += "\nDate: " + formatTimestamp() + "\n" + msg + "\n";
+            return res;
         }
         String res = "===" + "\ncommit " + getId();
         res += "\nMerge: " + parent.substring(0, 7) + " " + secondParent.substring(0, 7);

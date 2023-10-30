@@ -40,8 +40,9 @@ public class Repository {
     /** java gitlet.Main init */
     public static void init(String[] args) throws IOException {
         validateNumArgs(args, 1);
+        String msg = "A Gitlet version-control system already exists in the current directory.";
         if (GITLET_DIR.exists()) {
-            System.out.println("A Gitlet version-control system already exists in the current directory.");
+            System.out.println(msg);
             System.exit(0);
         }
         GITLET_DIR.mkdir();
@@ -218,15 +219,16 @@ public class Repository {
             return;
         }
 
-        Commit checkedCommit = readObject(join(COMMIT_DIR, info.getBranches().get(args[1])), Commit.class);
-        Commit commit = readObject(join(COMMIT_DIR, info.getBranches().get(info.getCurBranch())), Commit.class);
+        Commit checkedCommit = Commit.readCommit(info.getBranches().get(args[1]));
+        Commit commit = Commit.readCurCommit(info);
 
         List<String> names = plainFilenamesIn(CWD);
+        String mg = "There is an untracked file in the way; delete it, or add and commit it first.";
         if (names != null) {
             for (String name : names) {
-                if (!commit.getFileBlobs().containsKey(name) && checkedCommit.getFileBlobs().containsKey(name)) {
+                if (commit.getBlobId(name) == null && checkedCommit.getBlobId(name) != null) {
                     if (!checkedCommit.getBlobId(name).equals(getFileId(name))) {
-                        System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                        System.out.println(mg);
                         System.exit(0);
                     }
                 }
@@ -425,11 +427,12 @@ public class Repository {
 
         /**  current files in the dir */
         List<String> names = plainFilenamesIn(CWD);
+        String mg = "There is an untracked file in the way; delete it, or add and commit it first.";
         if (names != null) {
             for (String name : names) {
-                if (!commit.getFileBlobs().containsKey(name) && checkedCommit.getFileBlobs().containsKey(name)) {
+                if (commit.getBlobId(name) == null && checkedCommit.getBlobId(name) != null) {
                     if (!checkedCommit.getBlobId(name).equals(getFileId(name))) {
-                        System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                        System.out.println(mg);
                         System.exit(0);
                     }
                 }
@@ -463,27 +466,9 @@ public class Repository {
         mergeErrorHandle(args);
         Info info = Info.getInfo();
         String mergedBranchName = args[1];
-        List<String> names = plainFilenamesIn(CWD);
         Commit mergeCommit = Commit.readCommit(info.getCommitFromBranch(mergedBranchName));
         Commit curCommit = Commit.readCurCommit(info);
         Commit split = getSplitCommit(mergeCommit, curCommit);
-
-
-        assert split != null;
-        if (split.getId().equals(mergeCommit.getId())) {
-            System.out.println("Given branch is an ancestor of the current branch.");
-            System.exit(0);
-        }
-
-        if (split.getId().equals(curCommit.getId())) {
-            String[] newArgs = new String[2];
-            newArgs[0] = "checkout";
-            newArgs[1] = args[1];
-            checkout(newArgs);
-            System.out.println("Current branch fast-forwarded.");
-            System.exit(0);
-        }
-
         for (String name : split.getFileBlobs().keySet()) {
             String splitBlob = split.getBlobId(name);
             String curBlob = curCommit.getBlobId(name);
@@ -502,28 +487,27 @@ public class Repository {
                 continue;
             } else {
                 if (curBlob != null && mergeBlob != null && !curBlob.equals(mergeBlob)) {
-                    // handle conflict
                     System.out.println("Encountered a merge conflict.");
                     String newContent = handleConflictResult(curCommit, mergeCommit, name);
                     writeContents(new File(name), newContent);
-
                     info.putInStagedForAddition(name, getFileId(name));
-                    Blob blob = new Blob(new File(name));
-                    blob.writeBlob();
+                    new Blob(new File(name)).writeBlob();
                 }
-                if ((curBlob == null && mergeBlob != null) || (curBlob != null && mergeBlob == null)) {
-                    // handle conflict
+                if (curBlob == null && mergeBlob != null) {
                     System.out.println("Encountered a merge conflict.");
                     String newContent = handleConflictResult(curCommit, mergeCommit, name);
                     writeContents(new File(name), newContent);
-
                     info.putInStagedForAddition(name, getFileId(name));
-                    Blob blob = new Blob(new File(name));
-                    blob.writeBlob();
+                    new Blob(new File(name)).writeBlob();
+                } if (curBlob != null && mergeBlob == null) {
+                    System.out.println("Encountered a merge conflict.");
+                    String newContent = handleConflictResult(curCommit, mergeCommit, name);
+                    writeContents(new File(name), newContent);
+                    info.putInStagedForAddition(name, getFileId(name));
+                    new Blob(new File(name)).writeBlob();
                 }
             }
         }
-
         Set<String> fileNames = new HashSet<>();
         fileNames.addAll(mergeCommit.getFileBlobs().keySet());
         fileNames.addAll(curCommit.getFileBlobs().keySet());
@@ -543,24 +527,21 @@ public class Repository {
             } else if (curBlob.equals(mergeBlob)) {
                 continue;
             } else if (!curBlob.equals(mergeBlob)) {
-                // handle conflict
                 System.out.println("Encountered a merge conflict.");
                 String newContent = handleConflictResult(curCommit, mergeCommit, name);
                 writeContents(new File(name), newContent);
-
                 info.putInStagedForAddition(name, getFileId(name));
-                Blob blob = new Blob(new File(name));
-                blob.writeBlob();
+                new Blob(new File(name)).writeBlob();
             }
         }
         info.setSecondParent(info.getCommitFromBranch(mergedBranchName));
-//        info.removeFromBranches(mergedBranchName);
         info.writeInfo();
         String[] commitArgs = new String[2];
         commitArgs[0] = "commit";
         commitArgs[1] = "Merged " + mergedBranchName + " into " + info.getCurBranch() +  ".";
         commit(commitArgs);
     }
+
 
     private static void mergeErrorHandle(String[] args) {
         validateNumArgs(args, 2);
@@ -583,15 +564,30 @@ public class Repository {
             System.exit(0);
         }
         Commit commit = Commit.readCurCommit(info);
+        String mg = "There is an untracked file in the way; delete it, or add and commit it first.";
         if (names != null) {
             for (String name : names) {
-                if (!commit.getFileBlobs().containsKey(name) && mergeCommit.getFileBlobs().containsKey(name)) {
+                if (commit.getBlobId(name) == null && mergeCommit.getBlobId(name) != null) {
                     if (!mergeCommit.getBlobId(name).equals(getFileId(name))) {
-                        System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                        System.out.println(mg);
                         System.exit(0);
                     }
                 }
             }
+        }
+        Commit split = getSplitCommit(mergeCommit, curCommit);
+        assert split != null;
+        if (split.getId().equals(mergeCommit.getId())) {
+            System.out.println("Given branch is an ancestor of the current branch.");
+            System.exit(0);
+        }
+        if (split.getId().equals(curCommit.getId())) {
+            String[] newArgs = new String[2];
+            newArgs[0] = "checkout";
+            newArgs[1] = args[1];
+            checkout(newArgs);
+            System.out.println("Current branch fast-forwarded.");
+            System.exit(0);
         }
     }
 
