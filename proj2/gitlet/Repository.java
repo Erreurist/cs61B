@@ -492,14 +492,13 @@ public class Repository {
                     writeContents(new File(name), newContent);
                     info.putInStagedForAddition(name, getFileId(name));
                     new Blob(new File(name)).writeBlob();
-                }
-                if (curBlob == null && mergeBlob != null) {
+                } else if (curBlob == null && mergeBlob != null) {
                     System.out.println("Encountered a merge conflict.");
                     String newContent = handleConflictResult(curCommit, mergeCommit, name);
                     writeContents(new File(name), newContent);
                     info.putInStagedForAddition(name, getFileId(name));
                     new Blob(new File(name)).writeBlob();
-                } if (curBlob != null && mergeBlob == null) {
+                } else if (curBlob != null && mergeBlob == null) {
                     System.out.println("Encountered a merge conflict.");
                     String newContent = handleConflictResult(curCommit, mergeCommit, name);
                     writeContents(new File(name), newContent);
