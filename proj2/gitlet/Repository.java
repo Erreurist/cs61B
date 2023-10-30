@@ -472,6 +472,7 @@ public class Repository {
         assert split != null;
         if (split.getId().equals(mergeCommit.getId())) {
             System.out.println("Given branch is an ancestor of the current branch.");
+            System.exit(0);
         }
 
         if (split.getId().equals(curCommit.getId())) {
@@ -480,6 +481,7 @@ public class Repository {
             newArgs[1] = args[1];
             checkout(newArgs);
             System.out.println("Current branch fast-forwarded.");
+            System.exit(0);
         }
 
         for (String name : split.getFileBlobs().keySet()) {
@@ -499,9 +501,7 @@ public class Repository {
             } else if (!splitBlob.equals(curBlob) && splitBlob.equals(mergeBlob)) {
                 continue;
             } else {
-                if (curBlob.equals(mergeBlob)) {
-                    continue;
-                } else {
+                if (curBlob != null && mergeBlob != null && !curBlob.equals(mergeBlob)) {
                     // handle conflict
                     System.out.println("Encountered a merge conflict.");
                     String newContent = handleConflictResult(curCommit, mergeCommit, name);
@@ -625,11 +625,11 @@ public class Repository {
     private static String handleConflictResult(Commit curCommit, Commit mergeCommit, String name) {
         String res = "<<<<<<< HEAD\n";
         if (curCommit.getBlobId(name) != null) {
-            res += readBlobContentById(curCommit.getBlobId(name));
+            res += readBlobContentById(curCommit.getBlobId(name)) + "\n";
         }
         res += "=======\n";
         if (mergeCommit.getBlobId(name) != null) {
-            res += readBlobContentById(mergeCommit.getBlobId(name));
+            res += readBlobContentById(mergeCommit.getBlobId(name)) + "\n";
         }
         res += ">>>>>>>";
         return res;
