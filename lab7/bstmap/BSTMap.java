@@ -3,29 +3,38 @@ import java.util.Iterator;
 import java.util.Set;
 
 public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
-    private int size;
-    private BSTNode root;
+    private Node root;
 
-    private class BSTNode {
+    private class Node {
         private K key;
-        private V value;
-        private BSTNode left;
-        private BSTNode right;
+        private V val;
+        private Node left;
+        private Node right;
+        private int size;
 
-        BSTNode(K key, V value) {
+        public Node(K key, V val) {
             this.key = key;
-            this.value = value;
+            this.val = val;
+            this.size = 1;
         }
     }
 
     public BSTMap() {
-        this.size = 0;
         this.root = null;
     }
     @Override
     public void clear() {
-        size = 0;
-        root = null;
+        clear(root);
+    }
+
+    private void clear(Node node) {
+        if (node == null) {
+            return;
+        }
+        clear(node.left);
+        clear(node.right);
+        node.left = null;
+        node.right = null;
     }
 
     @Override
@@ -39,49 +48,55 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
         return get(root, key);
     }
 
-    private V get(BSTNode node, K key) {
+    private V get(Node node, K key) {
+        if (key == null) {
+            throw new NullPointerException();
+        }
         if (node == null) {
             return null;
         }
-        if (node.key.equals(key)) {
-            return node.value;
-        }
-        if (node.key.compareTo(key) < 0) {
+        int cmp = node.key.compareTo(key);
+        if (cmp < 0) {
             return get(node.left, key);
-        }
-        else {
+        } else if (cmp > 0) {
             return get(node.right, key);
         }
+        return node.val;
     }
 
     @Override
     public int size() {
-        return size;
+        return size(root);
+    }
+
+    private int size(Node node) {
+        if (node != null) {
+            return node.size;
+        }
+        return 0;
     }
 
     @Override
-    public void put(K key, V value) {
-        if (root == null) {
-            size++;
-            root = new BSTNode(key, value);
-        } else {
-            put(root, key, value);
-        }
-
+    public void put(K key, V val) {
+        root = put(root, key, val);
     }
 
-    private BSTNode put(BSTNode node, K key, V value) {
+    private Node put(Node node, K key, V val) {
+        if (key == null) {
+            throw new NullPointerException();
+        }
         if (node == null) {
-            size++;
-            return new BSTNode(key, value);
+            return new Node(key, val);
         }
-        if (key.compareTo(node.key) < 0) {
-            node.left = put(node.left, key, value);
+        int cmp = key.compareTo(node.key);
+        if (cmp < 0) {
+            node.left = put(node.left, key, val);
+        } else if (cmp > 0) {
+            node.right = put(node.right, key, val);
+        } else {
+            node.val = val;
         }
-        if (key.compareTo(node.key) > 0) {
-            node.right = put(node.right, key, value);
-        }
-        node.value = value;
+        node.size = 1 + size(node.left) + size(node.right);
         return node;
     }
 
@@ -96,7 +111,7 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
     }
 
     @Override
-    public V remove(K key, V value) {
+    public V remove(K key, V val) {
         throw new UnsupportedOperationException();
     }
 
@@ -109,7 +124,7 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
         printInOrder(root);
     }
 
-    private void printInOrder(BSTNode node) {
+    private void printInOrder(Node node) {
         if (node == null) {
             return;
         }
@@ -117,5 +132,5 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
         System.out.println(node.key);
         printInOrder(node.right);
     }
-    
+
 }
